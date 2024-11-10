@@ -16,3 +16,4 @@ public class DevtypeApplication {
       return String.format("Hello hello, %s!", name);
     }
 }
+
