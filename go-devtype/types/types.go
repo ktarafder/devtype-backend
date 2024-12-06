@@ -24,3 +24,22 @@ type LoginUserPayload struct {
 	Email string `json:"email" validate:"required,email"`
 	Password string `json:"password" validate:"required"`
 }
+
+type TypingSession struct {
+	SessionID       int     `json:"session_id"`
+	OverallAccuracy float64 `json:"overall_accuracy"`
+	OverallSpeed    float64 `json:"overall_speed"`
+	UserID          int     `json:"user_id"`
+	SnippetID       int     `json:"snippet_id"`
+}
+
+type TypingSessionPayload struct {
+	OverallAccuracy float64 `json:"overall_accuracy" validate:"required"`
+	OverallSpeed    float64 `json:"overall_speed" validate:"required"`
+	UserID          int     `json:"user_id" validate:"required"`
+	SnippetID       int     `json:"snippet_id" validate:"required"`
+}
+
+type TypingSessionStore interface {
+	CreateTypingSession(session TypingSession) error
+}

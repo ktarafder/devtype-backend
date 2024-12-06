@@ -7,4 +7,3 @@ CREATE TABLE IF NOT EXISTS typing_session (
     CONSTRAINT fk_user FOREIGN KEY (user_id) REFERENCES users(user_id),
     CONSTRAINT fk_snippet FOREIGN KEY (snippet_id) REFERENCES code_snippets(snippet_id)
 );
-Th
