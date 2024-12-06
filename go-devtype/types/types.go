@@ -36,7 +36,7 @@ type TypingSession struct {
 type TypingSessionPayload struct {
 	OverallAccuracy float64 `json:"overall_accuracy" validate:"required"`
 	OverallSpeed    float64 `json:"overall_speed" validate:"required"`
-	UserID          int     `json:"user_id" validate:"required"`
+	UserID          int     `json:"user_id"`
 	SnippetID       int     `json:"snippet_id" validate:"required"`
 }
 

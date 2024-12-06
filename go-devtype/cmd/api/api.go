@@ -1,11 +1,14 @@
 package api
 
 import (
-    "database/sql"
-    "log"
-    "net/http"
-    "github.com/gorilla/mux"
-    "github.com/ktarafder/devtype-backend/service/user"
+	"database/sql"
+	"log"
+	"net/http"
+
+	"github.com/gorilla/mux"
+	"github.com/ktarafder/devtype-backend/service/snippets"
+	"github.com/ktarafder/devtype-backend/service/typing_session"
+	"github.com/ktarafder/devtype-backend/service/user"
 )
 
 type APIServer struct {
@@ -30,6 +33,15 @@ func (s *APIServer) setupRouter() {
     userStore := user.NewStore(s.db)
     userHandler := user.NewHandler(userStore)
     userHandler.RegisterRoutes(subrouter)
+
+    // Register typing_session routes
+    typingSessionStore := typing_session.NewStore(s.db)
+    typingSessionHandler := typing_session.NewHandler(typingSessionStore)
+    typingSessionHandler.RegisterRoutes(subrouter)
+
+    // Register snippet routes
+	snippetHandler := snippets.NewHandler(s.db)
+	snippetHandler.RegisterRoutes(subrouter)
 
     s.Handler = router
 }
