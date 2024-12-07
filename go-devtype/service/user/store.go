@@ -82,3 +82,15 @@ func (s *Store) DeleteUser(id string) error {
 	_, err := s.db.Exec("DELETE FROM users WHERE id = ?", id)
 	return err
 }
+
+func (s *Store) GetUserByID(id int) (*types.User, error) {
+	row := s.db.QueryRow(`SELECT id, firstName, lastName, email, total_score, createdAt FROM users WHERE id = ?`, id)
+
+	var user types.User
+	err := row.Scan(&user.ID, &user.FirstName, &user.LastName, &user.Email, &user.TotalScore, &user.CreatedAt)
+	if err != nil {
+		return nil, err
+	}
+
+	return &user, nil
+}

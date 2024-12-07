@@ -2,6 +2,7 @@ package types
 
 type UserStore interface {
 	GetUserByEmail(email string) (*User, error)
+	GetUserByID(id int) (*User, error)
 	GetUserById(id int) (*User, error)
 	CreateUser(User) error
 	DeleteUser(userID string) error

@@ -65,9 +65,12 @@ func TestUserServiceHandlers(t *testing.T) {
 
 type mockUserStore struct{}
 
-// DeleteUser implements types.UserStore.
+func (m *mockUserStore) GetUserByID(id int) (*types.User, error) {
+	return nil, nil
+}
+
 func (m *mockUserStore) DeleteUser(userID string) error {
-	panic("unimplemented")
+	return nil
 }
 
 func (m *mockUserStore) GetUserByEmail(email string) (*types.User, error) {

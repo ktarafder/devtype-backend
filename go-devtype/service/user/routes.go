@@ -1,8 +1,10 @@
 package user
 
 import (
+	"encoding/json"
 	"fmt"
 	"net/http"
+
 	"github.com/go-playground/validator/v10"
 	"github.com/gorilla/mux"
 	"github.com/ktarafder/devtype-backend/config"
@@ -23,6 +25,7 @@ func (h *Handler) RegisterRoutes(router *mux.Router) {
 	router.HandleFunc("/login", h.handleLogin).Methods("POST")
 	router.HandleFunc("/register", h.handleRegister).Methods("POST")
 	router.HandleFunc("/delete", h.handleDelete).Methods("DELETE")
+	router.HandleFunc("/user", h.handleGetUser).Methods("GET")
 }
 
 func (h *Handler) handleLogin(w http.ResponseWriter, r *http.Request) {
@@ -123,4 +126,24 @@ func (h *Handler) handleDelete(w http.ResponseWriter, r *http.Request) {
 
 	// Respond with success
 	utils.WriteJSON(w, http.StatusOK, map[string]string{"message": "User deleted successfully"})
+}
+
+func (h *Handler) handleGetUser(w http.ResponseWriter, r *http.Request) {
+	// Extract the user ID from the JWT in the Authorization header
+	userID, err := auth.GetUserIDFromJWT(r)
+	if err != nil {
+		http.Error(w, "Unauthorized: "+err.Error(), http.StatusUnauthorized)
+		return
+	}
+
+	// Query the database for user information
+	user, err := h.store.GetUserByID(userID)
+	if err != nil {
+		http.Error(w, "Failed to fetch user information", http.StatusInternalServerError)
+		return
+	}
+
+	// Return the user information as JSON
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(user)
 }
