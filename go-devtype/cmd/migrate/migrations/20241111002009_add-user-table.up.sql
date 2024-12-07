@@ -5,6 +5,7 @@ CREATE TABLE IF NOT EXISTS users (
     `email` VARCHAR(255) NOT NULL,
     `password` VARCHAR(255) NOT NULL,
     `createdAt` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    `total_score` DECIMAL(10, 2) NOT NULL DEFAULT 0,
 
     PRIMARY KEY (`id`),
     UNIQUE KEY (`email`)

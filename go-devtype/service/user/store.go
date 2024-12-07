@@ -43,6 +43,7 @@ func scanRowIntoUser(rows *sql.Rows) (*types.User, error) {
 		&user.Email,
 		&user.Password,
 		&user.CreatedAt,
+		&user.TotalScore,
 	)
 	if err != nil {
 		return nil, err
@@ -75,4 +76,9 @@ func (s *Store) CreateUser(user types.User) error {
 		return err
 	}
 	return nil
+}
+
+func (s *Store) DeleteUser(id string) error {
+	_, err := s.db.Exec("DELETE FROM users WHERE id = ?", id)
+	return err
 }

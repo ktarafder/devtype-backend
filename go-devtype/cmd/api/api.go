@@ -4,8 +4,8 @@ import (
 	"database/sql"
 	"log"
 	"net/http"
-
 	"github.com/gorilla/mux"
+	"github.com/ktarafder/devtype-backend/service/leaderboard"
 	"github.com/ktarafder/devtype-backend/service/snippets"
 	"github.com/ktarafder/devtype-backend/service/typing_session"
 	"github.com/ktarafder/devtype-backend/service/user"
@@ -42,6 +42,10 @@ func (s *APIServer) setupRouter() {
     // Register snippet routes
 	snippetHandler := snippets.NewHandler(s.db)
 	snippetHandler.RegisterRoutes(subrouter)
+
+    // Register leaderboard routes
+	leaderboardHandler := leaderboard.NewHandler(s.db)
+	leaderboardHandler.RegisterRoutes(subrouter)
 
     s.Handler = router
 }

@@ -19,11 +19,11 @@ func TestUserServiceHandlers(t *testing.T) {
 	t.Run("should fail if the user payload is invalid", func(t *testing.T) {
 		payload := types.RegisterUserPayload{
 			FirstName: "John",
-			LastName: "Doe",
-			Email: "user",
-			Password: "password",
+			LastName:  "Doe",
+			Email:     "user",
+			Password:  "password",
 		}
-		marshalled, _ := json.Marshal(payload) 
+		marshalled, _ := json.Marshal(payload)
 		req, err := http.NewRequest(http.MethodPost, "/register", bytes.NewBuffer(marshalled))
 		if err != nil {
 			t.Fatal(err)
@@ -42,11 +42,11 @@ func TestUserServiceHandlers(t *testing.T) {
 	t.Run("should correctly register a user", func(t *testing.T) {
 		payload := types.RegisterUserPayload{
 			FirstName: "John",
-			LastName: "Doe",
-			Email: "user@gmail.com",
-			Password: "password",
+			LastName:  "Doe",
+			Email:     "user@gmail.com",
+			Password:  "password",
 		}
-		marshalled, _ := json.Marshal(payload) 
+		marshalled, _ := json.Marshal(payload)
 		req, err := http.NewRequest(http.MethodPost, "/register", bytes.NewBuffer(marshalled))
 		if err != nil {
 			t.Fatal(err)
@@ -63,7 +63,12 @@ func TestUserServiceHandlers(t *testing.T) {
 	})
 }
 
-type mockUserStore struct {}
+type mockUserStore struct{}
+
+// DeleteUser implements types.UserStore.
+func (m *mockUserStore) DeleteUser(userID string) error {
+	panic("unimplemented")
+}
 
 func (m *mockUserStore) GetUserByEmail(email string) (*types.User, error) {
 	return nil, fmt.Errorf("user not found")

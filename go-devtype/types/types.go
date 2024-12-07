@@ -4,6 +4,7 @@ type UserStore interface {
 	GetUserByEmail(email string) (*User, error)
 	GetUserById(id int) (*User, error)
 	CreateUser(User) error
+	DeleteUser(userID string) error
 }
 type User struct {
 	ID int `json:"id"`
@@ -12,6 +13,7 @@ type User struct {
 	Email string `json:"email"`
 	Password string `json:"-"`
 	CreatedAt string `json:"created_at"`
+	TotalScore float64 `json:"total_score"`
 }
 type RegisterUserPayload struct {
 	FirstName string `json:"first_name" validate:"required"`

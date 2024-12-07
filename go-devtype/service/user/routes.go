@@ -3,7 +3,6 @@ package user
 import (
 	"fmt"
 	"net/http"
-
 	"github.com/go-playground/validator/v10"
 	"github.com/gorilla/mux"
 	"github.com/ktarafder/devtype-backend/config"
@@ -23,6 +22,7 @@ func NewHandler(store types.UserStore) *Handler {
 func (h *Handler) RegisterRoutes(router *mux.Router) {
 	router.HandleFunc("/login", h.handleLogin).Methods("POST")
 	router.HandleFunc("/register", h.handleRegister).Methods("POST")
+	router.HandleFunc("/delete", h.handleDelete).Methods("DELETE")
 }
 
 func (h *Handler) handleLogin(w http.ResponseWriter, r *http.Request) {
@@ -59,7 +59,7 @@ func (h *Handler) handleLogin(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	utils.WriteJSON(w, http.StatusOK, map[string]string{"token": token})
+	utils.WriteJSON(w, http.StatusOK, map[string]string{"token": token, "firstName": u.FirstName})
 }
 
 func (h *Handler) handleRegister(w http.ResponseWriter, r *http.Request) {
@@ -104,4 +104,23 @@ func (h *Handler) handleRegister(w http.ResponseWriter, r *http.Request) {
 	}
 
 	utils.WriteJSON(w, http.StatusCreated, nil)
+}
+
+func (h *Handler) handleDelete(w http.ResponseWriter, r *http.Request) {
+	// Extract user ID from JWT
+	userIDFromJWT, err := auth.GetUserIDFromJWT(r)
+	if err != nil {
+		utils.WriteError(w, http.StatusUnauthorized, fmt.Errorf("unauthorized: %s", err))
+		return
+	}
+
+	// Attempt to delete the user
+	err = h.store.DeleteUser(fmt.Sprint(userIDFromJWT))
+	if err != nil {
+		utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("failed to delete user: %s", err))
+		return
+	}
+
+	// Respond with success
+	utils.WriteJSON(w, http.StatusOK, map[string]string{"message": "User deleted successfully"})
 }
