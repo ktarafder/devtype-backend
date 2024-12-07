@@ -17,10 +17,10 @@ func NewHandler(db *sql.DB) *Handler {
 }
 
 func (h *Handler) RegisterRoutes(router *mux.Router) {
-	router.HandleFunc("/snippets", h.getSnippetByDifficulty).Methods("GET")
+	router.HandleFunc("/snippets", h.getSnippetsByDifficulty).Methods("GET")
 }
 
-func (h *Handler) getSnippetByDifficulty(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) getSnippetsByDifficulty(w http.ResponseWriter, r *http.Request) {
 	// Get the difficulty query parameter
 	difficulty := r.URL.Query().Get("difficulty")
 	if difficulty == "" {
@@ -34,29 +34,34 @@ func (h *Handler) getSnippetByDifficulty(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	// Query the database
+	// Query the database for 3 random snippets
 	query := `SELECT snippet_id, code_language, difficulty_level, snippet_text 
               FROM code_snippets 
               WHERE difficulty_level = ? 
               ORDER BY RAND() 
-              LIMIT 1`
-	row := h.db.QueryRow(query, difficulty)
-
-	// Scan the result into a struct
-	var snippet Snippet
-	err := row.Scan(&snippet.ID, &snippet.Language, &snippet.Difficulty, &snippet.Text)
+              LIMIT 5`
+	rows, err := h.db.Query(query, difficulty)
 	if err != nil {
-		if err == sql.ErrNoRows {
-			http.Error(w, "no snippets found for the specified difficulty", http.StatusNotFound)
-			return
-		}
 		http.Error(w, "internal server error", http.StatusInternalServerError)
 		return
 	}
+	defer rows.Close()
 
-	// Return the snippet as JSON
+	// Collect the results into a slice
+	var snippets []Snippet
+	for rows.Next() {
+		var snippet Snippet
+		err := rows.Scan(&snippet.ID, &snippet.Language, &snippet.Difficulty, &snippet.Text)
+		if err != nil {
+			http.Error(w, "internal server error", http.StatusInternalServerError)
+			return
+		}
+		snippets = append(snippets, snippet)
+	}
+
+	// Return the snippets as JSON
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(snippet)
+	json.NewEncoder(w).Encode(snippets)
 }
 
 type Snippet struct {
