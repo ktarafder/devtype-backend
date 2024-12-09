@@ -27,3 +27,26 @@ func (s *Store) CreateTypingSession(session types.TypingSession) error {
 	}
 	return nil
 }
+
+func (s *Store) GetTypingSessionsByUserID(userID int) ([]types.TypingSession, error) {
+	rows, err := s.db.Query(`
+		SELECT overall_accuracy, overall_speed 
+		FROM typing_session 
+		WHERE user_id = ?`, userID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var sessions []types.TypingSession
+	for rows.Next() {
+		var session types.TypingSession
+		err := rows.Scan(&session.OverallAccuracy, &session.OverallSpeed)
+		if err != nil {
+			return nil, err
+		}
+		sessions = append(sessions, session)
+	}
+
+	return sessions, nil
+}

@@ -20,10 +20,10 @@ func NewHandler(store types.TypingSessionStore) *Handler {
 
 func (h *Handler) RegisterRoutes(router *mux.Router) {
 	router.HandleFunc("/typing-session", h.handleTypingSession).Methods("POST")
+	router.HandleFunc("/typing-sessions", h.handleGetTypingSessions).Methods("GET")
 }
 
 func (h *Handler) handleTypingSession(w http.ResponseWriter, r *http.Request) {
-	// Extract user_id from JWT
 	userID, err := auth.GetUserIDFromJWT(r)
 	if err != nil {
 		utils.WriteError(w, http.StatusUnauthorized, err)
@@ -58,4 +58,29 @@ func (h *Handler) handleTypingSession(w http.ResponseWriter, r *http.Request) {
 
 	utils.WriteJSON(w, http.StatusCreated, map[string]string{"message": "Typing session created successfully"})
 }
+
+func (h *Handler) handleGetTypingSessions(w http.ResponseWriter, r *http.Request) {
+	userID, err := auth.GetUserIDFromJWT(r)
+	if err != nil {
+		utils.WriteError(w, http.StatusUnauthorized, err)
+		return
+	}
+
+	sessions, err := h.store.GetTypingSessionsByUserID(userID)
+	if err != nil {
+		utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("failed to fetch typing sessions: %s", err))
+		return
+	}
+
+	response := make([]map[string]float64, len(sessions))
+	for i, session := range sessions {
+		response[i] = map[string]float64{
+			"overall_accuracy": session.OverallAccuracy,
+			"overall_speed":    session.OverallSpeed,
+		}
+	}
+
+	utils.WriteJSON(w, http.StatusOK, response)
+}
+
 

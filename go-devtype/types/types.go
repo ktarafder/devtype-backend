@@ -45,4 +45,5 @@ type TypingSessionPayload struct {
 
 type TypingSessionStore interface {
 	CreateTypingSession(session TypingSession) error
+	GetTypingSessionsByUserID(userID int) ([]TypingSession, error)
 }
