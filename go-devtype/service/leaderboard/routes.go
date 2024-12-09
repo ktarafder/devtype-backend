@@ -19,10 +19,11 @@ func NewHandler(db *sql.DB) *Handler {
 
 func (h *Handler) RegisterRoutes(router *mux.Router) {
 	router.HandleFunc("/game/finish", h.updateLeaderboard).Methods("POST")
+	router.HandleFunc("/leaderboard", h.getLeaderboard).Methods("GET")
 }
 
 type GameFinishPayload struct {
-	Score float64 `json:"score"`
+	Score float64 `json:"total_score"`
 }
 
 func (h *Handler) updateLeaderboard(w http.ResponseWriter, r *http.Request) {
@@ -60,28 +61,31 @@ func (h *Handler) updateLeaderboard(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Update the leaderboard
 	_, err = tx.Exec(`
-		WITH ranked_users AS (
-			SELECT 
-				id AS user_id, 
-				total_score, 
-				ROW_NUMBER() OVER (ORDER BY total_score DESC) AS rank
-			FROM users
-			WHERE total_score > 0
-			LIMIT 3
-		)
-		UPDATE leaderboard AS lb
-		JOIN ranked_users AS ru ON lb.rank = ru.rank
-		SET lb.user_id = ru.user_id, 
-			lb.total_score = ru.total_score, 
-			lb.updated_at = CURRENT_TIMESTAMP;
+    WITH ranked_users AS (
+        SELECT 
+            id AS user_id, 
+            total_score, 
+            @rank := @rank + 1 AS ranking
+        FROM users, (SELECT @rank := 0) r
+        WHERE total_score > 0
+        ORDER BY total_score DESC
+        LIMIT 3
+    )
+    UPDATE leaderboard AS lb
+    JOIN ranked_users AS ru ON lb.ranking = ru.ranking
+    SET lb.user_id = ru.user_id, 
+        lb.total_score = ru.total_score, 
+        lb.updated_at = CURRENT_TIMESTAMP;
 	`)
+
 	if err != nil {
 		tx.Rollback()
-		http.Error(w, "Failed to update leaderboard", http.StatusInternalServerError)
+		http.Error(w, "Failed to update leaderboard: "+err.Error(), http.StatusInternalServerError)
 		return
 	}
+
+
 
 	// Commit the transaction
 	if err := tx.Commit(); err != nil {
@@ -94,4 +98,44 @@ func (h *Handler) updateLeaderboard(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(map[string]string{
 		"message": "Leaderboard updated successfully",
 	})
+}
+
+func (h *Handler) getLeaderboard(w http.ResponseWriter, r *http.Request) {
+	// Query the leaderboard table for the top 3 entries
+	rows, err := h.db.Query(`
+		SELECT lb.ranking, u.firstName, u.lastName, lb.total_score, lb.updated_at
+		FROM leaderboard lb
+		JOIN users u ON lb.user_id = u.id
+		ORDER BY lb.ranking ASC
+	`)
+	if err != nil {
+		http.Error(w, "Failed to fetch leaderboard data: "+err.Error(), http.StatusInternalServerError)
+		return
+	}
+	defer rows.Close()
+
+	// Parse the rows into a leaderboard entry slice
+	var leaderboard []LeaderboardEntry
+	for rows.Next() {
+		var entry LeaderboardEntry
+		err := rows.Scan(&entry.Rank, &entry.FirstName, &entry.LastName, &entry.TotalScore, &entry.UpdatedAt)
+		if err != nil {
+			http.Error(w, "Failed to parse leaderboard data", http.StatusInternalServerError)
+			return
+		}
+		leaderboard = append(leaderboard, entry)
+	}
+
+	// Return the leaderboard as JSON
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(leaderboard)
+}
+
+
+type LeaderboardEntry struct {
+	Rank       int     `json:"rank"`
+	FirstName  string  `json:"first_name"`
+	LastName   string  `json:"last_name"`
+	TotalScore float64 `json:"total_score"`
+	UpdatedAt  string  `json:"updated_at"`
 }

@@ -21,10 +21,17 @@ func (h *Handler) RegisterRoutes(router *mux.Router) {
 }
 
 func (h *Handler) getSnippetsByDifficulty(w http.ResponseWriter, r *http.Request) {
-	// Get the difficulty query parameter
+	// Get the query parameters
 	difficulty := r.URL.Query().Get("difficulty")
+	language := r.URL.Query().Get("language")
+
 	if difficulty == "" {
 		http.Error(w, "difficulty query parameter is required", http.StatusBadRequest)
+		return
+	}
+
+	if language == "" {
+		http.Error(w, "language query parameter is required", http.StatusBadRequest)
 		return
 	}
 
@@ -34,13 +41,19 @@ func (h *Handler) getSnippetsByDifficulty(w http.ResponseWriter, r *http.Request
 		return
 	}
 
+	// Validate language value
+	if language != "python" && language != "java" {
+		http.Error(w, "language must be 'python' or 'java'", http.StatusBadRequest)
+		return
+	}
+
 	// Query the database for 3 random snippets
 	query := `SELECT snippet_id, code_language, difficulty_level, snippet_text 
               FROM code_snippets 
-              WHERE difficulty_level = ? 
+              WHERE difficulty_level = ? AND code_language = ?
               ORDER BY RAND() 
               LIMIT 5`
-	rows, err := h.db.Query(query, difficulty)
+	rows, err := h.db.Query(query, difficulty, language)
 	if err != nil {
 		http.Error(w, "internal server error", http.StatusInternalServerError)
 		return
