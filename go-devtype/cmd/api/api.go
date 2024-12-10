@@ -5,10 +5,11 @@ import (
 	"log"
 	"net/http"
 	"github.com/gorilla/mux"
-	"github.com/ktarafder/devtype-backend/service/leaderboard"
-	"github.com/ktarafder/devtype-backend/service/snippets"
-	"github.com/ktarafder/devtype-backend/service/typing_session"
-	"github.com/ktarafder/devtype-backend/service/user"
+    "github.com/ktarafder/devtype-backend/service/leaderboard"
+    "github.com/ktarafder/devtype-backend/service/snippets"
+    "github.com/ktarafder/devtype-backend/service/typing_session"
+    "github.com/ktarafder/devtype-backend/service/user"
+    "github.com/ktarafder/devtype-backend/service/feedback"
 )
 
 type APIServer struct {
@@ -47,6 +48,12 @@ func (s *APIServer) setupRouter() {
 	leaderboardHandler := leaderboard.NewHandler(s.db)
 	leaderboardHandler.RegisterRoutes(subrouter)
 
+    // Register feedback routes
+    feedbackStore := feedback.NewStore(s.db) 
+    feedbackHandler := feedback.NewHandler(feedbackStore)
+    feedbackHandler.RegisterRoutes(subrouter)
+
+    
     s.Handler = router
 }
 

@@ -47,3 +47,13 @@ type TypingSessionStore interface {
 	CreateTypingSession(session TypingSession) error
 	GetTypingSessionsByUserID(userID int) ([]TypingSession, error)
 }
+
+type Feedback struct {
+    ImprovementArea string `json:"improvement_area"`
+    FeedbackText    string `json:"feedback_text"`
+    UserID   int    `json:"user_id"`
+}
+
+type FeedbackStore interface {
+    CreateFeedback(feedback Feedback) error
+}
